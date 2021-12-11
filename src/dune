@@ -1,0 +1,47 @@
+(executable
+ (name main)
+ (modules main db2_json)
+ (libraries
+  mdxish
+  astring
+  lwt
+  js_top_worker.client
+  js_of_ocaml-lwt
+  js_of_ocaml-tyxml
+  omd)
+ (modes js)
+ (preprocess
+  (pps js_of_ocaml-ppx)))
+
+(executable
+ (name worker)
+ (modules worker)
+ (libraries js_top_worker)
+ (modes byte)
+ (preprocess
+  (pps js_of_ocaml-ppx)))
+
+(rule
+ (targets worker.js)
+ (action
+  (run
+   %{bin:js_of_ocaml}
+   --toplevel
+   --pretty
+   +toplevel.js
+   +dynlink.js
+   %{dep:worker.bc}
+   -o
+   %{targets})))
+
+(rule
+ (targets db2_json.ml)
+ (deps
+  (:db2 db2.pretty.json))
+ (action
+  (with-stdout-to
+   %{targets}
+   (progn
+    (echo "let content = {db| ")
+    (cat %{db2})
+    (echo "|db}")))))

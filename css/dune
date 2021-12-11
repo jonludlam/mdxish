@@ -1,0 +1,5 @@
+(rule
+ (target tailwind.css)
+ (deps tailwind.in.css tailwind.config.js)
+ (action
+  (run npx tailwindcss -i tailwind.in.css -o ./tailwind.css)))
