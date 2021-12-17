@@ -1,15 +1,11 @@
 (executable
  (name main)
  (modules main db2_json)
- (libraries
-  mdxish
-  astring
-  lwt
-  js_top_worker.client
-  js_of_ocaml-lwt
-  js_of_ocaml-tyxml
-  omd)
+ (libraries mdxish astring lwt js_top_worker-client js_of_ocaml-lwt
+   js_of_ocaml-tyxml omd code-mirror)
  (modes js)
+ (js_of_ocaml
+  (javascript_files basic.js))
  (preprocess
   (pps js_of_ocaml-ppx)))
 
@@ -24,15 +20,8 @@
 (rule
  (targets worker.js)
  (action
-  (run
-   %{bin:js_of_ocaml}
-   --toplevel
-   --pretty
-   +toplevel.js
-   +dynlink.js
-   %{dep:worker.bc}
-   -o
-   %{targets})))
+  (run %{bin:js_of_ocaml} --toplevel --pretty +toplevel.js +dynlink.js
+    %{dep:worker.bc} -o %{targets})))
 
 (rule
  (targets db2_json.ml)
@@ -45,3 +34,11 @@
     (echo "let content = {db| ")
     (cat %{db2})
     (echo "|db}")))))
+
+(rule
+ (targets index.js)
+ (deps main.bc.js)
+ (mode promote-until-clean)
+ (action
+  (progn
+   (run npx esbuild --bundle --outfile=index.js main.bc.js))))

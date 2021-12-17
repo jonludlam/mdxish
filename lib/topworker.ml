@@ -7,7 +7,6 @@ open Js_of_ocaml
 open Lwt
 module Worker = Brr_webworkers.Worker
 module Rpc_lwt = Idl.Make (Lwt)
-
 module Toprpc = Js_top_worker_rpc.Toplevel_api_gen.Make (Rpc_lwt.GenClient ())
 
 let log fmt = Format.kasprintf (fun s -> Firebug.console##log (Js.string s)) fmt
@@ -40,7 +39,7 @@ let v s callback =
     with Jv.Error _ -> failwith "Failed to created worker"
   in
   let context =
-    Js_top_worker_client.Worker_rpc.start worker 1000
+    Js_top_worker_client.Worker_rpc.start worker 100000
       (timeout_container worker callback)
   in
   let rpc = Js_top_worker_client.Worker_rpc.rpc context in

@@ -10,12 +10,12 @@ type _ cellty =
 type 'a cell = {
   cell_type : 'a cellty;
   source : string;
+  metadata : (string * string) list;
   outputs : string option;
   execution_count : int option;
 }
 
 type packed_cell = C : 'a cell -> packed_cell
-
 type t = { cells : packed_cell list }
 
 let init (json : string) =
@@ -23,6 +23,18 @@ let init (json : string) =
     let cell_type_opt = Jv.find c "cell_type" in
     let source_opt = Jv.find c "source" in
     let outputs = Jv.find c "outputs" in
+    let metadata = Jv.find c "metadata" in
+    let metadata_props = [ "skip" ] in
+    let metadata =
+      match metadata with
+      | None -> []
+      | Some m ->
+          List.map
+            (fun prop ->
+              Jv.find m prop |> Option.map (fun s -> (prop, Jv.to_string s)))
+            metadata_props
+          |> List.filter_map (fun x -> x)
+    in
     let execution_count = Jv.find c "execution_count" in
     match
       (Option.map Jv.to_string cell_type_opt, Option.map Jv.to_string source_opt)
@@ -32,6 +44,7 @@ let init (json : string) =
           {
             cell_type = Code;
             source;
+            metadata;
             outputs = Option.map Jv.to_string outputs;
             execution_count = Option.map Jv.to_int execution_count;
           }
@@ -42,6 +55,7 @@ let init (json : string) =
           {
             cell_type = Markdown;
             source;
+            metadata;
             outputs = Option.map Jv.to_string outputs;
             execution_count = Option.map Jv.to_int execution_count;
           }

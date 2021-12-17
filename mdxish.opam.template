@@ -1,0 +1,11 @@
+pin-depends: [
+  ["js_of_ocaml.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_of_ocaml-tyxml.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_of_ocaml-ppx.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_of_ocaml-lwt.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_of_ocaml-toplevel.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_of_ocaml-compiler.3.11.0" "git+https://github.com/jonludlam/js_of_ocaml#lazy_files"]
+  ["js_top_worker.0.0.0" "git+https://github.com/jonludlam/js_top_worker#main"]
+  ["js_top_worker-client.0.0.0" "git+https://github.com/jonludlam/js_top_worker#main"]
+  ["code-mirror.0.0.0" "git+https://github.com/patricoferris/jsoo-code-mirror.git#main"]
+]

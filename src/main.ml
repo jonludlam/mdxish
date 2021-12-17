@@ -3,37 +3,59 @@ open Mdxish
 
 let log fmt = Format.kasprintf (fun s -> Firebug.console##log (Js.string s)) fmt
 
-let render_code_cell (cell : _ Mdxish.Codeblock.cell) o =
-  let open Js_of_ocaml_tyxml.Tyxml_js in
-  let open Js_top_worker_rpc in
-  let coerce elt =
-    (elt : Html_types.pre Html.elt :> Html_types.flow5 Html.elt)
+open Code_mirror
+
+let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv
+
+let markdown () =
+  let md = Jv.get Jv.global "__CM__markdown" in
+  Jv.apply md [||] |> Extension.of_jv
+
+let editor content parent =
+  let open Editor in
+  let config =
+    State.Config.create ~doc:(Jstr.of_string content)
+      ~extensions:[| basic_setup; markdown () |]
+      ()
   in
+  let state = State.create ~config () in
+  let opts = View.opts ~state ~parent () in
+  let _editor : View.t = View.create ~opts () in
+  (* Brr.Console.log [ _editor; state; config ]; *)
+  ()
+
+let render_code_cell (cell : _ Mdxish.Codeblock.cell) o parent =
+  let open Js_top_worker_rpc in
   let to_out x extra_cls =
     Option.to_list x
     |> List.map (fun text ->
-           coerce
-             Html.(
+           Brr.(
+             El.(
                pre
                  [
                    code
-                     ~a:[ a_class [ "language-ocaml" ] ]
-                     [ span ~a:[ a_class [ extra_cls ] ] [ txt text ] ];
-                 ]))
+                     ~at:[ At.v (Jstr.v "class") (Jstr.v "language-ocaml") ]
+                     [
+                       span
+                         ~at:[ At.v (Jstr.v "class") (Jstr.v extra_cls) ]
+                         [ txt (Jstr.v text) ];
+                     ];
+                 ])))
   in
-  let stdout = to_out o.Toplevel_api_gen.stdout "text-white-500" in
-  let stderr = to_out o.Toplevel_api_gen.stderr "text-red-500" in
-  let sharp_ppf = to_out o.Toplevel_api_gen.sharp_ppf "text-green-500" in
-  let caml_ppf = to_out o.Toplevel_api_gen.caml_ppf "text-blue-500" in
-  To_dom.of_element
-    Html.(
-      div
-        ([
-           coerce
-           @@ pre
-                [ code ~a:[ a_class [ "language-ocaml" ] ] [ txt cell.source ] ];
-         ]
-        @ stdout @ stderr @ sharp_ppf @ caml_ppf))
+  let outputs =
+    match o with
+    | Some o ->
+        let stdout = to_out o.Toplevel_api_gen.stdout "text-white-500" in
+        let stderr = to_out o.Toplevel_api_gen.stderr "text-red-500" in
+        let sharp_ppf = to_out o.Toplevel_api_gen.sharp_ppf "text-green-500" in
+        let caml_ppf = to_out o.Toplevel_api_gen.caml_ppf "text-blue-500" in
+        [ stdout; stderr; sharp_ppf; caml_ppf ] |> List.flatten
+    | None -> []
+  in
+
+  let my_button = Brr.(El.(button [ txt (Jstr.v "run") ])) in
+  editor cell.source parent;
+  Brr.(El.(div (my_button :: outputs)))
 
 let render_markdown_cell (cell : _ Mdxish.Codeblock.cell) =
   let open Js_of_ocaml_tyxml.Tyxml_js in
@@ -48,6 +70,10 @@ let get_ok = function Ok r -> r | _ -> failwith "bad"
 let th =
   let ( let* ) = Lwt.bind in
   let p = Dom_html.getElementById "output" in
+  let brr_p =
+    Brr.Document.find_el_by_id Brr.G.document (Jstr.of_string "output")
+    |> Option.get
+  in
   match Mdxish.Codeblock.init Db2_json.content with
   | Ok l ->
       Firebug.console##log
@@ -63,14 +89,16 @@ let th =
           (fun c ->
             match c with
             | Codeblock.(C ({ cell_type = Code; _ } as cell)) ->
-                let line =
-                  Astring.String.cuts ~sep:"\n" cell.source |> List.hd
+                let* o =
+                  match List.assoc_opt "skip" cell.metadata with
+                  | None ->
+                      let* o = Mdxish.Codeblock.exec w cell in
+                      Lwt.return (Some (get_ok o))
+                  | Some _ ->
+                      log "Skipping!";
+                      Lwt.return None
                 in
-                let* o = Mdxish.Codeblock.exec w cell in
-                let o = get_ok o in
-                Dom.appendChild p (render_code_cell cell o);
-                log "Executing block starting '%s'" line;
-                let* _ = Mdxish.Codeblock.exec w cell in
+                Brr.El.append_children brr_p [ render_code_cell cell o brr_p ];
                 Lwt.return ()
             | Codeblock.(C ({ cell_type = Markdown; _ } as cell)) ->
                 Dom.appendChild p (render_markdown_cell cell);

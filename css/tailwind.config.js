@@ -1,5 +1,9 @@
 module.exports = {
-  purge: [],
+  content : [
+    "../src/*.ml",
+    "../lib/*.ml",
+    "../index.html"
+  ],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},

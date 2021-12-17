@@ -33,7 +33,7 @@
     {
       "cell_type": "code",
       "metadata": {},
-      "source": "module StringMap = Map.Make(String)\n\nmodule type VAL = sig\n  type t\nend\n\nmodule Make (V : VAL) = struct\n  type t = V.t StringMap.t\n  let empty = StringMap.empty\n  let add = StringMap.add\n  let find = StringMap.find\n  let mem = StringMap.mem\n  let remove = StringMap.remove\n  let update key default f t =\n    let cur = if mem key t then find key t else default in\n    let newv = f cur in\n    StringMap.add key newv t\n  let iter = StringMap.iter\nend\n\nmodule Row = struct\n  include Make(String)\nend\n\nmodule Table = struct\n  include Make(Row)\nend\n\nmodule TableSet = struct\n  include Make(Table)\nend\n\nmodule Database = struct\n  type t = TableSet.t\n  let empty = TableSet.empty\nend\n\nlet get_field tblname objref fldname db =\n  TableSet.find tblname db |>\n  Table.find objref |>\n  Row.find fldname\n\nlet set_field tblname objref fldname v : Database.t -> Database.t =\n  (function _ -> v)\n  |> Row.update fldname \"\"\n  |> Table.update objref Row.empty\n  |> TableSet.update tblname Table.empty\n\nlet dump db =\n  Printf.printf \"(*\";\n  TableSet.iter (fun tblname table ->\n    Printf.printf \"\\n+ TABLE: %s\\n\\n\" tblname;\n    Table.iter (fun objref row ->\n      Printf.printf \"++ Object: %s\\n\" objref;\n      Row.iter (fun fldname v ->\n        Printf.printf \"  %s: %s\\n\" fldname v) row) table) db;\n  Printf.printf \"*)\\n\"\n\nlet db = ref Database.empty",
+      "source": "module StringMap = Map.Make(String)\n\nmodule type VAL = sig\n  type t\nend\n\nmodule Make (V : VAL) = struct\n  type t = V.t StringMap.t\n  let empty = StringMap.empty\n  let add = StringMap.add\n  let find = StringMap.find\n  let mem = StringMap.mem\n  let remove = StringMap.remove\n  let update key default f t =\n    let cur = if mem key t then find key t else default in\n    let newv = f cur in\n    StringMap.add key newv t\n  let iter = StringMap.iter\nend\n\nmodule Row = struct\n  include Make(String)\nend\n\nmodule Table = struct\n  include Make(Row)\nend\n\nmodule TableSet = struct\n  include Make(Table)\nend\n\nmodule Database = struct\n  type t = TableSet.t\n  let empty = TableSet.empty\nend\n\nlet get_field tblname objref fldname db =\n  TableSet.find tblname db |>\n  Table.find objref |>\n  Row.find fldname\n\nlet set_field tblname objref fldname v : Database.t -> Database.t =\n  (function _ -> v)\n  |> Row.update fldname \"\"\n  |> Table.update objref Row.empty\n  |> TableSet.update tblname Table.empty\n\nlet dump db =\n  Printf.printf \"(*\";\n  TableSet.iter (fun tblname table ->\n    Printf.printf \"\\n+ TABLE: %s\\n\\n\" tblname;\n    Table.iter (fun objref row ->\n      Printf.printf \"++ Object: %s\\n\" objref;\n      Row.iter (fun fldname v ->\n        Printf.printf \"  %s: %s\\n\" fldname v) row) table) db;\n  Printf.printf \"*)\\n\"\n\nlet db = ref Database.empty;;",
       "outputs": [],
       "execution_count": 2
     },
@@ -44,19 +44,19 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": { "skip": true },
       "source": "type field = {\n  release: release;\n  lifecycle: lifecycle_transition list;\n  field_persist: bool;\n  default_value: api_value option;\n  internal_only: bool;\n  qualifier: qualifier;\n  field_name: string;\n  full_name: string list;\n  ty: ty;\n  field_description: string;\n  field_has_effect: bool;\n  field_ignore_foreign_key: bool;\n  field_setter_roles: string list option;\n  field_getter_roles: string list option;\n  field_map_keys_roles: (string * (string list option)) list;\n  field_doc_tags: doc_tag list;\n}",
       "outputs": [],
       "execution_count": 3
     },
     {
       "cell_type": "markdown",
-      "metadata": {},
+      "metadata": { },
       "source": "\nand then these fields are gathered together along with the list of methods into a value that represents the whole class:\n"
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type obj = {\n  name : string;\n  description : string;\n  obj_lifecycle: lifecycle_transition list;\n  contents : content list;\n  messages : message list;\n  doccomments : (string * string) list;\n  msg_lifecycles: ((string * (lifecycle_transition list)) list);\n  gen_constructor_destructor: bool;\n  force_custom_actions: qualifier option; (* None,Some(RW),Some(StaticRO) *)\n  obj_allowed_roles: string list option; (* for construct, destruct and explicit obj msgs*)\n  obj_implicit_msg_allowed_roles: string list option; (* for all other implicit obj msgs*)\n  gen_events: bool;\n  persist: persist_option;\n  obj_release: release;\n  in_database: bool; (* If the object is in the database *)\n  obj_doc_tags: doc_tag list;\n}",
       "outputs": [],
       "execution_count": 4
@@ -68,7 +68,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "let t =\n    create_obj\n        ~in_db:true\n        ~in_product_since:rel_rio\n        ~in_oss_since:oss_since_303\n        ~internal_deprecated_since:None\n        ~persist:PersistEverything\n        ~gen_constructor_destructor:true\n        ~name:_vm\n        ~descr:\"A virtual machine (or 'guest').\"\n        ~gen_events:true\n        ~lifecycle:[\n            Published, rel_rio, \"\";\n        ]\n        ~messages_default_allowed_roles:_R_VM_ADMIN\n        ~messages:[\n            snapshot;\n            snapshot_with_quiesce;\n(* ... *)\n        ]\n        ~contents:([\n            uid _vm;\n(* ... *)\n            field ~qualifier:DynamicRO ~ty:(Set (Ref _vbd)) \"VBDs\" \"virtual block devices\";\n            field  ~ty:(Map(String, String)) \"other_config\" \"additional configuration\";\n            field ~qualifier:DynamicRO ~ty:Int \"domid\" \"domain ID (if available, -1 otherwise)\";\n(* ... *)\n        ])\n        ()",
       "outputs": [],
       "execution_count": 5
@@ -80,7 +80,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type ty =\n  | String\n  | Int\n  | Float\n  | Bool\n  | DateTime\n  | Enum of string * (string * string) list\n  | Set of ty\n  | Map of ty * ty\n  | Ref of string\n  | Record of string",
       "outputs": [],
       "execution_count": 6
@@ -92,7 +92,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "let power_state =\n    Enum (\"vm_power_state\", [ \"Halted\", \"VM is offline and not using any resources\";\n                              \"Paused\", \"All resources have been allocated but the VM itself is paused and its vCPUs are not running\";\n                              \"Running\", \"Running\";\n                              \"Suspended\", \"VM state has been saved to disk and it is nolonger running. Note that disks remain in-use while the VM is suspended.\"])",
       "outputs": [],
       "execution_count": 7
@@ -104,7 +104,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type vm_power_state = [ `Halted | `Paused | `Running | `Suspended ]",
       "outputs": [],
       "execution_count": 8
@@ -116,7 +116,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type vm_power_state_set = vm_power_state list\ntype string_to_string_map = (string * string) list",
       "outputs": [],
       "execution_count": 9
@@ -128,7 +128,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type vM_t = {\n    vM_uuid : string;\n    vM_name_label : string;\n    vM_VBDs : ref_VBD_set;\n(* ... *)\n    }",
       "outputs": [],
       "execution_count": 10
@@ -140,7 +140,7 @@
     },
     {
       "cell_type": "code",
-      "metadata": {},
+      "metadata": {"skip": true },
       "source": "type ref_VM = [`VM] Ref.t",
       "outputs": [],
       "execution_count": 11
