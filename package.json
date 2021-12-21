@@ -9,15 +9,15 @@
   "author": "",
   "license": "ISC",
   "browser": {
-        "fs": false,
-        "constants": false,
-        "child_process": false,
-        "tty": false
+    "fs": false,
+    "constants": false,
+    "child_process": false,
+    "tty": false
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.4.1",
-    "tailwindcss": "^2.2.19",
-    "parcel": "2.0.0"
+    "parcel": "2.0.0",
+    "tailwindcss": "^2.2.19"
   },
   "dependencies": {
     "@codemirror/basic-setup": "^0.19.0",

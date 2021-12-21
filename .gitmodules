@@ -1,0 +1,3 @@
+[submodule "vendor/jsoo-code-mirror"]
+	path = vendor/jsoo-code-mirror
+	url = git@github.com:patricoferris/jsoo-code-mirror

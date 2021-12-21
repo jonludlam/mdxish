@@ -1,8 +1,8 @@
 (executable
  (name main)
- (modules main db2_json)
+ (modules main db2_json omd_brr)
  (libraries mdxish astring lwt js_top_worker-client js_of_ocaml-lwt
-   js_of_ocaml-tyxml omd code-mirror)
+   js_of_ocaml-tyxml omd code-mirror brr brr.note)
  (modes js)
  (js_of_ocaml
   (javascript_files basic.js))
