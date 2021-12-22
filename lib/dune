@@ -2,5 +2,12 @@
  (name mdxish)
  (preprocess
   (pps js_of_ocaml-ppx))
- (libraries js_of_ocaml js_of_ocaml-tyxml js_top_worker.rpc
-   js_top_worker-client lwt brr omd))
+ (libraries
+  js_of_ocaml
+  js_of_ocaml-tyxml
+  js_top_worker.rpc
+  js_top_worker-client
+  lwt
+  brr
+  brr.note
+  omd))

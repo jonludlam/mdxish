@@ -94,7 +94,7 @@ let exec : type a. Topworker.t -> a cell -> a cell Lwt.t =
     match res with
     | Ok res ->
       Lwt.return (set_outputs res 0 cell)
-    | Error err ->
+    | Error _err ->
       Lwt.return (cell)
     )
   | Markdown ->
