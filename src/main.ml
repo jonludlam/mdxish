@@ -99,6 +99,7 @@ let render_code_cell (cell : _ Mdxish.Codeblock.cell) : action Note.event * El.t
                ]))
   in
   let o = cell.outputs in
+  let extra_cls = match List.assoc_opt "colour" cell.metadata with | Some _ -> [At.class' (Jstr.v "bg-red-500")] | None -> [] in 
   let outputs =
     match o with
     | Some o ->
@@ -106,12 +107,13 @@ let render_code_cell (cell : _ Mdxish.Codeblock.cell) : action Note.event * El.t
         let stderr = to_out o.Toplevel_api_gen.stderr "text-red-500" in
         (* let sharp_ppf = to_out o.Toplevel_api_gen.sharp_ppf "text-green-500" in *)
         let caml_ppf = to_out o.Toplevel_api_gen.caml_ppf "text-blue-500" in
-        El.div ([ stdout; stderr; caml_ppf ] |> List.flatten)
+        El.div ~at:extra_cls ([ stdout; stderr; caml_ppf ] |> List.flatten)
     | None -> El.div []
   in
 
   let run_button = El.(button ~at:button_class [ txt (Jstr.v "run") ]) in
   let add_cell_button = El.(button ~at:button_class [ txt (Jstr.v "add") ]) in
+  let red_button = El.(button ~at:button_class [ txt (Jstr.v "red") ]) in
   let el, _, view = editor cell.source () in
   let run_evt =
     Evr.on_el Ev.click (fun _ -> `Run (get_doc view, cell)) run_button
@@ -120,12 +122,16 @@ let render_code_cell (cell : _ Mdxish.Codeblock.cell) : action Note.event * El.t
   let add_evt =
     Evr.on_el Ev.click (fun _ -> `Add_cell cell.id) add_cell_button
   in
-  ( Note.E.select [ run_evt; add_evt ],
+
+  let _red_evt =
+    Evr.on_el Ev.click (fun _ -> `Modify_metadata (cell.id, "colour", "red")) red_button
+  in
+
+  ( Note.E.select [ run_evt; add_evt; ],
     El.(div [ el; run_button; outputs; add_cell_button ]) )
 
 let render_markdown_cell (cell : _ Mdxish.Codeblock.cell) :
     action Note.event * El.t =
-  let open Js_of_ocaml_tyxml.Tyxml_js in
   let doc = Omd.of_string cell.source in
   let content = Omd_brr.(to_brr (of_doc doc)) in
   let my_button =

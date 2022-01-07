@@ -59,6 +59,9 @@ let set_outputs : 'a. 'a -> int -> 'a cell -> 'a cell =
  fun outputs execution_count cell ->
   { cell with outputs = Some outputs; execution_count = Some execution_count }
 
+let set_metadata : 'a. string -> string -> 'a cell -> 'a cell =
+  fun k v cell -> { cell with metadata = (k,v)::cell.metadata}
+
 let of_json c =
   let cell_type_opt = Jv.find c "cell_type" in
   let source_opt = Jv.find c "source" in
@@ -90,7 +93,6 @@ let of_json c =
 let exec :
     type a. Topworker.t -> a cell -> (a, [> `Msg of string ]) Result.t Lwt.t =
  fun w cell ->
-  let open Lwt.Infix in
   match cell.cell_type with
   | Code -> Topworker.exec w cell.source
   | Markdown ->

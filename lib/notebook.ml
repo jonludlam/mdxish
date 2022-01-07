@@ -9,7 +9,8 @@ type action =
   | `Remove_cell of Codeblock.Id.t
   | `Set_cell_source of Codeblock.Id.t * string
   | `Set_code_outputs of Codeblock.Id.t * Codeblock.code * int
-  | `Set_markdown_outputs of Codeblock.Id.t * Codeblock.markdown * int ]
+  | `Set_markdown_outputs of Codeblock.Id.t * Codeblock.markdown * int
+  | `Modify_metadata of Codeblock.Id.t * string * string ]
 
 let modify :
     Codeblock.Id.t ->
@@ -47,6 +48,7 @@ let execute : action -> t -> t =
           | _ -> [])
         v
   | `Remove_cell id -> modify id (function _ -> []) v
+  | `Modify_metadata (id, k, v') -> modify id (function C c -> [ C (Codeblock.set_metadata k v' c)]) v
 
 let init (json : string) =
   let jstr = Jstr.of_string json in

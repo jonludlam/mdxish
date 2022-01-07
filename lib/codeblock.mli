@@ -35,3 +35,4 @@ val of_json : Jv.t -> packed_cell option
 val exec : Topworker.t -> 'a cell -> ('a, [> `Msg of string ]) Result.t Lwt.t
 val set_source : string -> 'a cell -> 'a cell
 val set_outputs : 'a -> int -> 'a cell -> 'a cell
+val set_metadata : string -> string -> 'a cell -> 'a cell
