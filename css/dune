@@ -1,5 +1,9 @@
 (rule
  (target tailwind.css)
- (deps tailwind.in.css tailwind.config.js)
+ (deps
+  tailwind.in.css
+  tailwind.config.js
+  (glob_files ../lib/*.ml)
+  (glob_files ../src/*.ml))
  (action
   (run npx tailwindcss -i tailwind.in.css -o ./tailwind.css)))
