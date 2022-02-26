@@ -48,7 +48,8 @@ let execute : action -> t -> t =
           | _ -> [])
         v
   | `Remove_cell id -> modify id (function _ -> []) v
-  | `Modify_metadata (id, k, v') -> modify id (function C c -> [ C (Codeblock.set_metadata k v' c)]) v
+  | `Modify_metadata (id, k, v') ->
+      modify id (function C c -> [ C (Codeblock.set_metadata k v' c) ]) v
 
 let init (json : string) =
   let jstr = Jstr.of_string json in

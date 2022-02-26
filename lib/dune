@@ -5,9 +5,17 @@
  (libraries
   js_of_ocaml
   js_of_ocaml-tyxml
-  js_top_worker.rpc
+  js_top_worker-rpc
   js_top_worker-client
+  cohttp-lwt-jsoo
+  digestif.ocaml
+  checkseum.ocaml
   lwt
   brr
+  unix
+  irmin
+  irmin-git
+  irmin-http
+  irmin-indexeddb
   brr.note
   omd))

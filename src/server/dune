@@ -1,0 +1,41 @@
+(executable
+ (name main)
+ (libraries dream irmin-unix unix))
+
+(rule
+ (targets assets.ml)
+ (deps ./assets/index.js ./assets/worker.js ./assets/tailwind.css)
+ (action
+  (with-stdout-to
+   %{null}
+   (run %{bin:ocaml-crunch} -m plain ./assets -o %{targets}))))
+
+(rule
+ (targets html.ml)
+ (deps html.eml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
+ (targets db2_json.ml)
+ (deps
+  (:db2 db2.pretty.json))
+ (action
+  (with-stdout-to
+   %{targets}
+   (progn
+    (echo "let content = {db| ")
+    (cat %{db2})
+    (echo "|db}")))))
+
+(rule
+ (targets db5_json.ml)
+ (deps
+  (:db5 db5.json))
+ (action
+  (with-stdout-to
+   %{targets}
+   (progn
+    (echo "let content = {db| ")
+    (cat %{db5})
+    (echo "|db}")))))

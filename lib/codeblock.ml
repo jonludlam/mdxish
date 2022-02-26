@@ -7,6 +7,8 @@ type code = TopAPI.exec_result
 type markdown = string
 type _ cellty = Markdown : markdown cellty | Code : code cellty
 
+let log fmt = Format.kasprintf (fun s -> Firebug.console##log (Js.string s)) fmt
+
 module Id : sig
   type t
 
@@ -60,7 +62,7 @@ let set_outputs : 'a. 'a -> int -> 'a cell -> 'a cell =
   { cell with outputs = Some outputs; execution_count = Some execution_count }
 
 let set_metadata : 'a. string -> string -> 'a cell -> 'a cell =
-  fun k v cell -> { cell with metadata = (k,v)::cell.metadata}
+ fun k v cell -> { cell with metadata = (k, v) :: cell.metadata }
 
 let of_json c =
   let cell_type_opt = Jv.find c "cell_type" in
@@ -70,11 +72,17 @@ let of_json c =
   let metadata_props = [ "skip" ] in
   let metadata =
     match metadata with
-    | None -> []
+    | None ->
+        log "No metadata";
+        []
     | Some m ->
         List.map
           (fun prop ->
-            Jv.find m prop |> Option.map (fun s -> (prop, Jv.to_string s)))
+            log "looking for %s" prop;
+            Jv.find m prop
+            |> Option.map (fun s ->
+                   log "Found it!";
+                   (prop, Jv.to_string s)))
           metadata_props
         |> List.filter_map (fun x -> x)
   in
@@ -90,11 +98,19 @@ let of_json c =
       Some (C cell)
   | _, _ -> None
 
-let exec :
-    type a. Topworker.t -> a cell -> (a, [> `Msg of string ]) Result.t Lwt.t =
+type exec_err = [ `TopAPI of TopAPI.err | `Msg of string ]
+
+let exec : type a. Topworker.t -> a cell -> (a, exec_err) Lwt_result.t =
  fun w cell ->
   match cell.cell_type with
-  | Code -> Topworker.exec w cell.source
+  | Code -> (
+      match List.assoc_opt "skip" cell.metadata with
+      | None ->
+          Lwt.(
+            bind (Topworker.exec w cell.source) (function
+              | Ok x -> return (Ok x)
+              | Error x -> return (Error (`TopAPI x))))
+      | Some _ -> Lwt.return (Error (`Msg "Not for execution")))
   | Markdown ->
       let doc = Omd.of_string cell.source in
       let content = Omd.to_html doc in

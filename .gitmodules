@@ -1,3 +1,12 @@
 [submodule "vendor/jsoo-code-mirror"]
 	path = vendor/jsoo-code-mirror
 	url = git@github.com:patricoferris/jsoo-code-mirror
+[submodule "vendor/js_top_worker"]
+	path = vendor/js_top_worker
+	url = git@github.com:jonludlam/js_top_worker
+[submodule "vendor/irmin"]
+	path = vendor/irmin
+	url = git@github.com:jonludlam/irmin
+[submodule "vendor/irmin-indexeddb"]
+	path = vendor/irmin-indexeddb
+	url = https://github.com/jonludlam/irmin-indexeddb

@@ -1,0 +1,20 @@
+(rule
+ (alias default)
+ (deps ../../jsapp/worker.js)
+ (targets worker.js)
+ (action
+  (copy %{deps} %{targets})))
+
+(rule
+ (alias default)
+ (deps ../../jsapp/index.js)
+ (targets index.js)
+ (action
+  (copy %{deps} %{targets})))
+
+(rule
+ (alias default)
+ (deps ../../../css/tailwind.css)
+ (targets tailwind.css)
+ (action
+  (copy %{deps} %{targets})))

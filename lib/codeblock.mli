@@ -26,13 +26,14 @@ type 'a cell = {
 type code_cell = TopAPI.exec_result cell
 type md_cell = string cell
 type packed_cell = C : 'a cell -> packed_cell
+type exec_err = [ `TopAPI of TopAPI.err | `Msg of string ]
 
 val code_of_exec_result : TopAPI.exec_result -> code
 val markdown_of_string : string -> markdown
 val v : 'a cellty -> string -> (string * string) list -> 'a cell
 val id : packed_cell -> Id.t
 val of_json : Jv.t -> packed_cell option
-val exec : Topworker.t -> 'a cell -> ('a, [> `Msg of string ]) Result.t Lwt.t
+val exec : Topworker.t -> 'a cell -> ('a, exec_err) Lwt_result.t
 val set_source : string -> 'a cell -> 'a cell
 val set_outputs : 'a -> int -> 'a cell -> 'a cell
 val set_metadata : string -> string -> 'a cell -> 'a cell
